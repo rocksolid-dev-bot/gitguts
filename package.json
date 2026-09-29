@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "pretest": "bash scripts/make-fixtures.sh",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
