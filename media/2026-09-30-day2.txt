@@ -1,0 +1,87 @@
+gitguts day 2 close-out capture — 2026-09-30
+
+== fixtures ==
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+make-fixtures exit=0
+
+== typecheck ==
+tsc --noEmit exit=0
+
+== invariants (by path) ==
+ok: no child_process/execSync in src/
+ok: no throw in src/
+invariants.sh exit=0
+
+== test suite ==
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/idx-oracle.test.ts (7 tests) 18ms
+ ✓ test/oracle.test.ts (17 tests) 38ms
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  23:05:31
+   Duration  1.10s (transform 176ms, setup 0ms, collect 222ms, tests 56ms, environment 1ms, prepare 195ms)
+
+vitest run exit=0
+
+== suite total reconciliation ==
+test/oracle.test.ts: 17 tests (2 loose-object baseline + 3 fixture SHAs x 5 assertions each)
+test/idx-oracle.test.ts: 7 tests (idx v2 reader against git verify-pack -v)
+total = 17 + 7 = 24
+
+== packed fixture measurements ==
+idx path: test/fixtures/repos/packed/.git/objects/pack/pack-a9230d4958bf7deba7ab266acc88df61900ff070.idx
+7ef5d7e28f6c0cabf4706160f9806f3023a97e5f commit 245 149 12
+f8083ad2953a4fef171654654906196d37704812 commit 245 150 161
+f015b99d680cb36834780610109a4c777a5d1286 commit 245 150 311
+749cbfca6980f395d7c2efdaa52daaf998d8caa1 commit 197 121 461
+80c0c57b260b8b6ab41a54722cb3720f5e20859c blob   3510 807 582
+086cf86753540b2e439a975ea0400c1bb4c4bd7a tree   35 45 1389
+a24bd669c030f11263790fc4ae7f056965f62ce0 tree   35 46 1434
+c7dc7f06047662fdeaa343392c3ec2f79f8e8d39 blob   25 36 1480 1 80c0c57b260b8b6ab41a54722cb3720f5e20859c
+4d23cf3790bd968c9382dc7f2585abace6328777 tree   35 45 1516
+fe831487599d1e39148627175d4d2d7ef17336e2 blob   25 36 1561 1 80c0c57b260b8b6ab41a54722cb3720f5e20859c
+3782bfd8f231522840c99ac3ad33b32c1306eb8f tree   35 46 1597
+3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3 blob   25 36 1643 1 80c0c57b260b8b6ab41a54722cb3720f5e20859c
+non delta: 9 objects
+chain length = 1: 3 objects
+test/fixtures/repos/packed/.git/objects/pack/pack-a9230d4958bf7deba7ab266acc88df61900ff070.pack: ok
+verify-pack exit=0
+object line count:
+12
+idx bytes 0-7:
+ ff 74 4f 63 00 00 00 02
+fanout[255]:
+ 00 00 00 0c
+
+== fresh-clone-check (by path, second tree) ==
+== clone ==
+clone exit=0
+== npm ci ==
+npm ci exit=0
+== red direction: no pretest ==
+no-pretest exit=1
+== green direction: with pretest ==
+with-pretest exit=0
+fresh-clone overall exit=0
+fresh-clone-check.sh exit=0
+
+== grep invariants (src/ never throws, never child_process) ==
+throw-in-src grep exit=1 (1=no matches, correct)
+child-process-in-src grep exit=1 (1=no matches, correct)
+
+== git state ==
+61b1528 feat: add packfile .idx v2 reader, verified against git verify-pack -v (item 3b)
+dc058e4 test: add packed fixture generator for delta-chain reader (item 3a)
+98956cc test: add committed fresh-clone-check script for defect 1
+0fe6b39 fix: remove unused beforeAll import and wire pretest to fixtures
+c7d491d docs: add day 1 close-out capture
+ac7d424 feat: add public index and usage probe (stretch)
+8b35a02 test: add oracle harness against git cat-file and invariant checks
+0e07d97 feat: add project skeleton and loose-object reader
+origin-diff exit=0 (empty output above means nothing unpushed)
+?? media/2026-09-30-day2.txt
+git status exit=0 (empty output above means clean tree)
