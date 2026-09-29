@@ -1,0 +1,60 @@
+=== gitguts day 1 close-out capture, 2026-09-29 ===
+
+$ node -v
+v18.19.1
+exit=0
+
+$ npm ci
+
+added 47 packages, and audited 48 packages in 2s
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (3 moderate, 1 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+exit=0
+
+$ npx tsc --noEmit
+exit=0
+
+--- deliberate TS6133 break: adding unused local to src/loose.ts ---
+$ npx tsc --noEmit (with unused local injected)
+src/loose.ts(2,7): error TS6133: '_unusedLocal' is declared but its value is never read.
+exit=2
+--- restored src/loose.ts to committed state ---
+$ npx tsc --noEmit (restored)
+exit=0
+
+$ npm test
+
+> gitguts@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/oracle.test.ts (17 tests) 35ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  19:18:40
+   Duration  541ms (transform 95ms, setup 0ms, collect 118ms, tests 35ms, environment 0ms, prepare 93ms)
+
+exit=0
+
+$ npm run build
+
+> gitguts@0.0.0 build
+> tsc
+
+exit=0
+
+$ bash scripts/invariants.sh
+ok: no child_process/execSync in src/
+ok: no throw in src/
+exit=0
