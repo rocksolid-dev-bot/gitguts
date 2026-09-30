@@ -16,4 +16,5 @@ export type {
   DeltaStream,
   ResolvedPackObject,
   ResolveBaseBySha,
+  PackObjectHeaderAt,
 } from "./pack.js";
