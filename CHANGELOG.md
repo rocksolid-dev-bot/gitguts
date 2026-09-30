@@ -20,3 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixture generation (`scripts/make-fixtures.sh`) that builds both the loose
   and packed test repositories by invoking `git` directly, with pinned author
   and committer dates for determinism.
+- Pack delta reconstruction (`src/pack.ts`): parses `OFS_DELTA`/`REF_DELTA`
+  object headers and their copy/insert instruction streams, then resolves a
+  delta chain to its final object bytes. Verified in
+  `test/pack-oracle.test.ts`, which reconstructs all twelve objects in the
+  packed fixture byte-identically against `git cat-file`.
