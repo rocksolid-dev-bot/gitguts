@@ -1,0 +1,226 @@
+=== gitguts day 3 close-out capture — 2026-09-30 ===
+
+--- bash scripts/make-fixtures.sh ---
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+exit=0
+
+--- npx tsc --noEmit ---
+exit=0
+
+--- grep -rn "throw " src/ (expect 0 hits) ---
+exit=1 (1 = no matches, expected)
+
+--- header parse: offset 582 -> type 3 (blob), size 3510 ---
+582: { typeCode: 3, type: 'blob', size: 3510, dataOffset: 585 }
+1480 : {
+  typeCode: 6,
+  type: 'ofs-delta',
+  size: 25,
+  dataOffset: 1484,
+  baseOffset: 582
+}
+1561 : {
+  typeCode: 6,
+  type: 'ofs-delta',
+  size: 25,
+  dataOffset: 1565,
+  baseOffset: 582
+}
+1643 : {
+  typeCode: 6,
+  type: 'ofs-delta',
+  size: 25,
+  dataOffset: 1647,
+  baseOffset: 582
+}
+1480 delta: {
+  srcSize: 3510,
+  tgtSize: 3510,
+  copyCount: 4,
+  insertCount: 3,
+  copyBytes: 3507,
+  insertBytes: 3,
+  sum: 3510
+}
+1561 delta: {
+  srcSize: 3510,
+  tgtSize: 3510,
+  copyCount: 4,
+  insertCount: 3,
+  copyBytes: 3507,
+  insertBytes: 3,
+  sum: 3510
+}
+1643 delta: {
+  srcSize: 3510,
+  tgtSize: 3510,
+  copyCount: 4,
+  insertCount: 3,
+  copyBytes: 3507,
+  insertBytes: 3,
+  sum: 3510
+}
+resolved 1480 depth: 1 type: blob size: 3510 payloadLen: 3510
+line10: line 10 edit3
+base line10: line 10 edit4 depth: 0
+exit=0
+
+--- npm test (pretest regenerates fixtures; suite total reconciled below) ---
+
+> gitguts@0.0.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+
+> gitguts@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/pack-oracle.test.ts (6 tests) 128ms
+ ✓ test/idx-oracle.test.ts (7 tests) 19ms
+ ✓ test/oracle.test.ts (17 tests) 37ms
+
+ Test Files  3 passed (3)
+      Tests  30 passed (30)
+   Start at  15:21:14
+   Duration  1.70s (transform 232ms, setup 0ms, collect 299ms, tests 184ms, environment 1ms, prepare 276ms)
+
+exit=0
+
+--- suite reconciliation: 17 (loose oracle) + 7 (idx oracle) + 6 (pack oracle) = 30 ---
+
+--- mandatory red-run: drop the +1 bias from the OFS_DELTA varint decode ---
+diff against committed version:
+131c131
+<       o = ((o + 1) << 7) | (b & 0x7f);
+---
+>       o = (o << 7) | (b & 0x7f); // DELIBERATELY BROKEN: dropped the +1 bias
+
+--- npx vitest run test/pack-oracle.test.ts (RED: bias dropped) ---
+
+ RUN  v2.1.9 /work/code
+
+ ❯ test/pack-oracle.test.ts (6 tests | 5 failed) 32ms
+   × oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves c7dc7f06047662fdeaa343392c3ec2f79f8e8d39 11ms
+     → resolvePackObject failed for c7dc7f06047662fdeaa343392c3ec2f79f8e8d39: not a valid zlib stream at data offset 731 (object at 710)
+   × oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves fe831487599d1e39148627175d4d2d7ef17336e2 1ms
+     → resolvePackObject failed for fe831487599d1e39148627175d4d2d7ef17336e2: not a valid zlib stream at data offset 731 (object at 710)
+   × oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3 1ms
+     → resolvePackObject failed for 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3: not a valid zlib stream at data offset 731 (object at 710)
+   × oracle: resolvePackObject against git cat-file / git verify-pack -v > a reconstructor that silently returned the base would fail here: content differs from the base, not just sizes 1ms
+     → not a valid zlib stream at data offset 731 (object at 710)
+   × oracle: resolvePackObject against git cat-file / git verify-pack -v > reconstructs all 12 objects the .idx enumerates, matching git cat-file -t/-s for each 7ms
+     → resolvePackObject failed for 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3: not a valid zlib stream at data offset 731 (object at 710)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/pack-oracle.test.ts > oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves c7dc7f06047662fdeaa343392c3ec2f79f8e8d39
+Error: resolvePackObject failed for c7dc7f06047662fdeaa343392c3ec2f79f8e8d39: not a valid zlib stream at data offset 731 (object at 710)
+ ❯ test/pack-oracle.test.ts:122:17
+    120|         const resolved = resolvePackObject(packBuf, entry.offset, reso…
+    121|         if ("error" in resolved) {
+    122|           throw new Error(`resolvePackObject failed for ${sha}: ${reso…
+       |                 ^
+    123|         }
+    124| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/pack-oracle.test.ts > oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves fe831487599d1e39148627175d4d2d7ef17336e2
+Error: resolvePackObject failed for fe831487599d1e39148627175d4d2d7ef17336e2: not a valid zlib stream at data offset 731 (object at 710)
+ ❯ test/pack-oracle.test.ts:122:17
+    120|         const resolved = resolvePackObject(packBuf, entry.offset, reso…
+    121|         if ("error" in resolved) {
+    122|           throw new Error(`resolvePackObject failed for ${sha}: ${reso…
+       |                 ^
+    123|         }
+    124| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/pack-oracle.test.ts > oracle: resolvePackObject against git cat-file / git verify-pack -v > the 3 delta objects reconstruct byte-identical to git, at the right depth > resolves 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3
+Error: resolvePackObject failed for 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3: not a valid zlib stream at data offset 731 (object at 710)
+ ❯ test/pack-oracle.test.ts:122:17
+    120|         const resolved = resolvePackObject(packBuf, entry.offset, reso…
+    121|         if ("error" in resolved) {
+    122|           throw new Error(`resolvePackObject failed for ${sha}: ${reso…
+       |                 ^
+    123|         }
+    124| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/pack-oracle.test.ts > oracle: resolvePackObject against git cat-file / git verify-pack -v > a reconstructor that silently returned the base would fail here: content differs from the base, not just sizes
+Error: not a valid zlib stream at data offset 731 (object at 710)
+ ❯ test/pack-oracle.test.ts:143:33
+    141|     const delta = resolvePackObject(packBuf, deltaEntry.offset, resolv…
+    142|     const base = resolvePackObject(packBuf, baseEntry.offset, resolveB…
+    143|     if ("error" in delta) throw new Error(delta.error);
+       |                                 ^
+    144|     if ("error" in base) throw new Error(base.error);
+    145| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/pack-oracle.test.ts > oracle: resolvePackObject against git cat-file / git verify-pack -v > reconstructs all 12 objects the .idx enumerates, matching git cat-file -t/-s for each
+Error: resolvePackObject failed for 3336c5f9e69e0b64f3e67d2fd7d40c7b7eb0e7a3: not a valid zlib stream at data offset 731 (object at 710)
+ ❯ test/pack-oracle.test.ts:164:15
+    162|       const resolved = resolvePackObject(packBuf, entry.offset, resolv…
+    163|       if ("error" in resolved) {
+    164|         throw new Error(`resolvePackObject failed for ${entry.sha}: ${…
+       |               ^
+    165|       }
+    166|       expect(resolved.type).toBe(gitCatFile("-t", entry.sha));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)
+   Start at  15:21:23
+   Duration  635ms (transform 171ms, setup 0ms, collect 173ms, tests 32ms, environment 0ms, prepare 106ms)
+
+RED exit=1
+
+--- restored src/pack.ts to the committed version ---
+(empty diff above == restored exactly)
+
+--- npx vitest run test/pack-oracle.test.ts (GREEN: restored) ---
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/pack-oracle.test.ts (6 tests) 133ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  15:21:35
+   Duration  982ms (transform 407ms, setup 0ms, collect 409ms, tests 133ms, environment 0ms, prepare 115ms)
+
+GREEN exit=0
+
+--- bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+exit=0
+
+--- bash scripts/fresh-clone-check.sh ---
+== clone ==
+clone exit=0
+== npm ci ==
+npm ci exit=0
+== red direction: no pretest ==
+no-pretest exit=1
+== green direction: with pretest ==
+with-pretest exit=0
+fresh-clone overall exit=0
+exit=0
+
+--- clean tree check: git status --short -- . ':!media/' ---
+exit=0 (empty output above means clean tree, excluding this capture's own untracked file)
+
+--- git log origin/main..HEAD (should be empty once this capture is committed+pushed) ---
+66f3ed0 test: pack-oracle — reconstruct all 12 objects, byte-identical to git cat-file
+exit=0
