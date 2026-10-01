@@ -57,3 +57,30 @@ done
 git repack -adq
 
 echo "ok: packed fixture repo built at $PACKED_DIR"
+
+# --- nested/ fixture -------------------------------------------------------
+# gitguts' headline is "largest blobs with their paths", and paths come from
+# tree objects. Neither basic/ nor packed/ has a subdirectory, so a tree test
+# against them would assert depth 1 and call it path resolution. This repo
+# stays loose by design -- packed is the delta fixture, nested is the tree
+# fixture.
+NESTED_DIR="$ROOT/test/fixtures/repos/nested"
+
+rm -rf "$NESTED_DIR"
+mkdir -p "$NESTED_DIR"
+cd "$NESTED_DIR"
+
+git init -q
+git config user.name "gitguts-fixture"
+git config user.email "gitguts-fixture@example.com"
+
+echo "top" > top.txt
+mkdir -p src/deep
+echo "deep" > src/deep/x.txt
+git add top.txt src/deep/x.txt
+
+export GIT_AUTHOR_DATE="2026-01-01T00:00:00+00:00"
+export GIT_COMMITTER_DATE="2026-01-01T00:00:00+00:00"
+git commit -q -m "nested"
+
+echo "ok: nested fixture repo built at $NESTED_DIR"
