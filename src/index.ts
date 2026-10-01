@@ -8,6 +8,8 @@ export {
   applyDelta,
   resolvePackObject,
 } from "./pack.js";
+export { parseTree } from "./tree.js";
+export type { TreeEntry, TreeEntryKind } from "./tree.js";
 export type {
   PackObjectType,
   PackObjectHeader,
