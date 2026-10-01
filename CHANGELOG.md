@@ -17,9 +17,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   64-bit large-offset table, written but unexercised by current fixtures), and
   exposes `lookupBySha` via binary search. Verified against `git verify-pack -v`
   in `test/idx-oracle.test.ts`.
-- Fixture generation (`scripts/make-fixtures.sh`) that builds both the loose
-  and packed test repositories by invoking `git` directly, with pinned author
-  and committer dates for determinism.
+- Fixture generation (`scripts/make-fixtures.sh`) that builds three test
+  repositories by invoking `git` directly, with pinned author and committer
+  dates for determinism: `basic` and `packed` (loose and packed object
+  storage), and `nested`, the loose fixture with a subdirectory so path
+  resolution through tree objects has something real to resolve.
 - Pack delta reconstruction (`src/pack.ts`): parses `OFS_DELTA`/`REF_DELTA`
   object headers and their copy/insert instruction streams, then resolves a
   delta chain to its final object bytes. Verified in
