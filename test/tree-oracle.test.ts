@@ -63,13 +63,11 @@ describe("tree-oracle: nested fixture", () => {
     expect(sizeOf(src)).toBe(Number(git(NESTED_DIR, "cat-file", "-s", srcSha)));
     expect(Number(git(NESTED_DIR, "cat-file", "-s", srcSha))).toBe(31);
 
-    const basicTreeLine = git(BASIC_DIR, "ls-tree", "HEAD");
     // basic has one file at root; its tree sha is read from the commit.
     const basicRootSha = git(BASIC_DIR, "rev-parse", "HEAD^{tree}");
     const basic = readLooseTree(BASIC_DIR, basicRootSha);
     expect(sizeOf(basic)).toBe(Number(git(BASIC_DIR, "cat-file", "-s", basicRootSha)));
     expect(Number(git(BASIC_DIR, "cat-file", "-s", basicRootSha))).toBe(33);
-    void basicTreeLine;
   });
 
   it("set equality against git ls-tree HEAD (non-recursive), both directions", () => {
