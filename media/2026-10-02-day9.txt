@@ -1,0 +1,55 @@
+=== gitguts day 9 close-out capture, 2026-10-02 cycle A ===
+
+--- bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+
+--- npm test ---
+
+> gitguts@0.0.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/pack-oracle.test.ts (6 tests) 108ms
+ ✓ test/tree-oracle.test.ts (4 tests) 63ms
+ ✓ test/idx-oracle.test.ts (7 tests) 18ms
+ ✓ test/oracle.test.ts (17 tests) 49ms
+ ✓ test/store-oracle.test.ts (3 tests) 16ms
+
+ Test Files  5 passed (5)
+      Tests  37 passed (37)
+   Start at  15:18:34
+   Duration  2.60s (transform 318ms, setup 0ms, collect 466ms, tests 253ms, environment 2ms, prepare 471ms)
+
+exit=0
+
+--- npx tsc --noEmit ---
+exit=0
+
+--- item 2 red/green pair (no-void-in-test guard) ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+FAIL: void found in test/
+RED exit=1
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+GREEN exit=0
+
+--- git log --oneline origin/main..HEAD (expect empty) ---
+exit=0
+
+--- git status --short (expect clean) ---
+?? media/2026-10-02-day9.txt
+exit=0
