@@ -1,0 +1,55 @@
+=== day11 close-out capture, 2026-10-03 ===
+
+--- step 0: revert inherited WIP (done at WAKE, re-verified here) ---
+$ git status --short
+exit=0
+
+--- item 1: README Status rewrite ---
+$ grep -c "Day 3. Three readers so far" README.md
+0
+exit=1
+$ grep -c "src/tree.ts\|src/store.ts\|src/summary.ts" README.md
+3
+exit=0
+$ grep -c "deltaStats\|largestObjects\|histogram" README.md
+0
+exit=1
+
+--- item 2: deltaStats ---
+$ grep -n "deltaStats" src/index.ts
+14:export { storageCensus, deltaStats, largestObjects } from "./summary.js";
+
+--- item 3: largestObjects ---
+$ grep -n "largestObjects" src/index.ts
+14:export { storageCensus, deltaStats, largestObjects } from "./summary.js";
+
+--- full suite ---
+$ npx tsc --noEmit
+exit=0
+$ npm test
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 39ms
+ ✓ test/pack-oracle.test.ts (6 tests) 87ms
+ ✓ test/tree-oracle.test.ts (4 tests) 51ms
+ ✓ test/idx-oracle.test.ts (7 tests) 18ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 71ms
+ ✓ test/oracle.test.ts (17 tests) 35ms
+ ✓ test/store-oracle.test.ts (3 tests) 15ms
+
+ Test Files  7 passed (7)
+      Tests  53 passed (53)
+   Start at  23:05:55
+   Duration  3.46s (transform 313ms, setup 0ms, collect 490ms, tests 314ms, environment 2ms, prepare 633ms)
+
+$ bash scripts/invariants.sh
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+
+--- clean tree / push state ---
+$ git log --oneline origin/main..HEAD
+(must be empty above)
+$ git status --short -- . :!media/
+(must be empty above)
