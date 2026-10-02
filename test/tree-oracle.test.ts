@@ -3,7 +3,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLooseObject } from "../src/loose.js";
-import { parseTree, type TreeEntry } from "../src/tree.js";
+import { parseTree, walkTree, type TreeEntry } from "../src/tree.js";
+import type { PackError } from "../src/pack.js";
 
 const NESTED_DIR = join(
   new URL(".", import.meta.url).pathname,
@@ -124,5 +125,33 @@ describe("tree-oracle: nested fixture", () => {
       .split(/\s+/)[0];
     expect(lsTreeMode).toBe("040000");
     expect(srcEntry.mode.padStart(6, "0")).toBe(lsTreeMode);
+  });
+
+  it("walkTree over the nested fixture's HEAD tree, set-compared against git ls-tree -r", () => {
+    const load = (sha: string): TreeEntry[] | PackError =>
+      readLooseTree(NESTED_DIR, sha);
+
+    const result = walkTree(rootSha, load);
+    if ("error" in result) {
+      throw new Error(`walkTree failed: ${result.error}`);
+    }
+
+    const lsTreeRLines = git(NESTED_DIR, "ls-tree", "-r", "HEAD")
+      .split("\n")
+      .filter(Boolean);
+    const expected = new Map<string, string>();
+    for (const line of lsTreeRLines) {
+      const [modeTypeInfo, path] = line.split("\t");
+      const sha = modeTypeInfo.split(/\s+/)[2];
+      expected.set(path, sha);
+    }
+
+    // Both directions, and at least one path with a slash so the recursion
+    // through `src/` actually ran rather than only resolving the root.
+    expect(Object.keys(result).length).toBe(expected.size);
+    for (const [path, sha] of expected) {
+      expect(result[path], `missing path ${path}`).toBe(sha);
+    }
+    expect(Object.keys(result).some((p) => p.includes("/"))).toBe(true);
   });
 });

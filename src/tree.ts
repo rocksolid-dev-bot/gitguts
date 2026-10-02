@@ -95,3 +95,54 @@ export function parseTree(payload: Uint8Array): TreeEntry[] | PackError {
 
   return entries;
 }
+
+/**
+ * Maps every blob path reachable from a root tree to its SHA, recursing
+ * into subtrees and joining names with `/`. Directory entries never appear
+ * as keys themselves -- only the blobs (and other non-tree entries) found
+ * while walking do.
+ *
+ * This function performs no I/O itself: `load` resolves a tree's own SHA
+ * to its already-parsed entries (typically reading the loose object off
+ * disk and running it through `parseTree`, as `test/` does). Loose objects
+ * only today -- a `load` that also resolves packed trees via `idx.ts` /
+ * `pack.ts` is the next day's work, not this one's; this function is
+ * storage-agnostic and does not need to change for that to happen.
+ *
+ * A corrupt or missing object comes back as a returned `PackError`, never
+ * raised -- `load` reports it exactly the way `parseTree` already does, and
+ * the walk propagates the first one it meets rather than continuing past it.
+ */
+export type TreeWalkResult = Record<string, string>;
+
+export function walkTree(
+  rootSha: string,
+  load: (sha: string) => TreeEntry[] | PackError
+): TreeWalkResult | PackError {
+  const result: TreeWalkResult = {};
+
+  function recurse(sha: string, prefix: string): PackError | undefined {
+    const entries = load(sha);
+    if ("error" in entries) {
+      return entries;
+    }
+    for (const entry of entries) {
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.kind === "tree") {
+        const err = recurse(entry.sha, path);
+        if (err) {
+          return err;
+        }
+      } else {
+        result[path] = entry.sha;
+      }
+    }
+    return undefined;
+  }
+
+  const err = recurse(rootSha, "");
+  if (err) {
+    return err;
+  }
+  return result;
+}
