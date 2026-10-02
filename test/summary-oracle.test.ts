@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { storageCensus } from "../src/index.js";
+import { storageCensus, deltaStats } from "../src/index.js";
 
 const FIXTURES_ROOT = join(
   new URL(".", import.meta.url).pathname,
@@ -107,4 +107,79 @@ describe("summary-oracle: storageCensus against git count-objects -v", () => {
     const census = storageCensus(join(repoDir, ".git"));
     expect(census.loose.count).toBe(0);
   });
+});
+
+/** Parses `git verify-pack -v`'s tail into a depth -> count histogram,
+ * from the live command's output every time -- never hardcoded -- so a
+ * regenerated fixture is still compared against truth. "non delta: N
+ * objects" is depth 0; "chain length = D: N objects" is depth D. */
+function parseVerifyPackHistogram(repoDir: string): {
+  histogram: Record<number, number>;
+  objects: number;
+} {
+  const idxPath = readdirSync(join(repoDir, ".git/objects/pack")).find((f) =>
+    f.endsWith(".idx")
+  );
+  const histogram: Record<number, number> = {};
+  if (!idxPath) {
+    return { histogram, objects: 0 };
+  }
+  const out = execFileSync("git", [
+    "verify-pack",
+    "-v",
+    join(repoDir, ".git/objects/pack", idxPath),
+  ]).toString("utf8");
+  let objects = 0;
+  const nonDelta = out.match(/^non delta: (\d+) objects$/m);
+  if (nonDelta) {
+    const n = Number(nonDelta[1]);
+    histogram[0] = n;
+    objects += n;
+  }
+  for (const m of out.matchAll(/^chain length = (\d+): (\d+) objects$/gm)) {
+    const depth = Number(m[1]);
+    const count = Number(m[2]);
+    histogram[depth] = count;
+    objects += count;
+  }
+  return { histogram, objects };
+}
+
+describe("summary-oracle: deltaStats against git verify-pack -v", () => {
+  it("packed: histogram, maxDepth, objects and meanDepth match the live oracle", () => {
+    const repoDir = join(FIXTURES_ROOT, "packed");
+    const oracle = parseVerifyPackHistogram(repoDir);
+    const stats = deltaStats(join(repoDir, ".git"));
+    expect(stats.histogram).toEqual(oracle.histogram);
+    expect(stats.objects).toBe(oracle.objects);
+    const maxDepth = Math.max(...Object.keys(oracle.histogram).map(Number));
+    expect(stats.maxDepth).toBe(maxDepth);
+    const depthSum = Object.entries(oracle.histogram).reduce(
+      (sum, [depth, count]) => sum + Number(depth) * count,
+      0
+    );
+    // Denominator is all twelve objects, not just the deltified three --
+    // 1.0 over the deltified subset is equally defensible, so this names
+    // the choice rather than leaving it implicit.
+    expect(stats.meanDepth).toBe(depthSum / oracle.objects);
+  });
+
+  for (const fixture of ["basic", "nested"] as const) {
+    it(`${fixture}: has an empty pack/ directory (the existsSync(packDir) trap), and deltaStats returns the no-pack shape`, () => {
+      const repoDir = join(FIXTURES_ROOT, fixture);
+      const packDir = join(repoDir, ".git/objects/pack");
+      // Proves the trap is real: the directory exists (ls exits 0) but is
+      // empty, so keying the branch on existsSync(packDir) would wrongly
+      // take the pack-present path here.
+      expect(existsSync(packDir)).toBe(true);
+      expect(readdirSync(packDir).length).toBe(0);
+
+      const stats = deltaStats(join(repoDir, ".git"));
+      expect(stats.histogram).toEqual({});
+      expect(stats.maxDepth).toBe(0);
+      expect(stats.objects).toBe(0);
+      expect(Number.isNaN(stats.meanDepth)).toBe(false);
+      expect(stats.meanDepth).toBe(0);
+    });
+  }
 });

@@ -11,8 +11,8 @@ export {
 export { parseTree, walkTree } from "./tree.js";
 export type { TreeEntry, TreeEntryKind, TreeWalkResult } from "./tree.js";
 export { makeTreeLoader } from "./store.js";
-export { storageCensus } from "./summary.js";
-export type { StorageCensus } from "./summary.js";
+export { storageCensus, deltaStats } from "./summary.js";
+export type { StorageCensus, DeltaStats } from "./summary.js";
 export type {
   PackObjectType,
   PackObjectHeader,

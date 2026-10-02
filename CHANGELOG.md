@@ -49,3 +49,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `pack/`, so `objects/info/packs` is never miscounted as a loose object.
   Verified in `test/summary-oracle.test.ts` against `git count-objects -v`,
   parsed live, across all three fixtures.
+- Delta-chain histogram (`src/summary.ts`): `deltaStats(gitDir)` resolves
+  every object in every pack under `.git/objects/pack/` through
+  `resolvePackObject` and buckets it by chain depth, reporting `histogram`,
+  `maxDepth`, `meanDepth` (over all objects, not just the deltified subset)
+  and `objects`. Keyed on "zero `.idx` files found" rather than on the
+  `pack/` directory's existence, since `basic` and `nested` both have an
+  empty one. Verified in `test/summary-oracle.test.ts` against
+  `git verify-pack -v`, parsed live, including the degenerate pack-less
+  case asserting `meanDepth` is `0`, never `NaN`.

@@ -12,6 +12,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readIdx } from "./idx.js";
+import { resolvePackObject } from "./pack.js";
 
 export interface StorageCensus {
   loose: { count: number; bytes: number };
@@ -70,4 +71,66 @@ export function storageCensus(gitDir: string): StorageCensus {
     loose: { count: looseCount, bytes: looseBytes },
     packed: { count: packedObjectCount, packs: packCount },
   };
+}
+
+export interface DeltaStats {
+  /** Delta chain depth -> object count at that depth. 0 = non-delta. */
+  histogram: Record<number, number>;
+  maxDepth: number;
+  /** Mean chain depth over every object the pack(s) contain, not just the
+   * deltified subset -- 1.0 over the deltified three is equally defensible
+   * and the field name has to pick one; this picks "all objects". */
+  meanDepth: number;
+  objects: number;
+}
+
+/**
+ * Builds the delta-chain depth histogram across every pack under
+ * `.git/objects/pack/`. Keyed on "zero `.idx` files found", never on the
+ * presence of the `pack/` directory -- `basic` and `nested` both *have* an
+ * (empty) `pack/` directory, so an `existsSync(packDir)` guard takes the
+ * pack-present branch on both and then globs zero `.idx` files. For a repo
+ * with no packs: `histogram` `{}`, `maxDepth` 0, `objects` 0, `meanDepth`
+ * 0 -- never `NaN` (0/0 is the natural output of the obvious
+ * implementation and survives a loose truthiness check, so this guards it
+ * explicitly).
+ */
+export function deltaStats(gitDir: string): DeltaStats {
+  const objectsDir = join(gitDir, "objects");
+  const packDir = join(objectsDir, "pack");
+  const idxFiles = existsSync(packDir)
+    ? readdirSync(packDir).filter((f) => f.endsWith(".idx"))
+    : [];
+
+  const histogram: Record<number, number> = {};
+  let objects = 0;
+  let depthSum = 0;
+
+  for (const idxFile of idxFiles) {
+    const base = idxFile.slice(0, -".idx".length);
+    const packPath = join(packDir, `${base}.pack`);
+    if (!existsSync(packPath)) {
+      continue;
+    }
+    const idxBuf = new Uint8Array(readFileSync(join(packDir, idxFile)));
+    const idx = readIdx(idxBuf);
+    if ("error" in idx) {
+      continue;
+    }
+    const packBuf = new Uint8Array(readFileSync(packPath));
+    for (const entry of idx.entries) {
+      const resolved = resolvePackObject(packBuf, entry.offset);
+      if ("error" in resolved) {
+        continue;
+      }
+      objects++;
+      depthSum += resolved.depth;
+      histogram[resolved.depth] = (histogram[resolved.depth] ?? 0) + 1;
+    }
+  }
+
+  const maxDepth = objects === 0 ? 0 : Math.max(...Object.keys(histogram).map(Number));
+  const meanDepth = objects === 0 ? 0 : depthSum / objects;
+
+  return { histogram, maxDepth, meanDepth, objects };
 }
