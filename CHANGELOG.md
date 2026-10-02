@@ -27,6 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   delta chain to its final object bytes. Verified in
   `test/pack-oracle.test.ts`, which reconstructs all twelve objects in the
   packed fixture byte-identically against `git cat-file`.
+- Tree reader (`src/tree.ts`): `parseTree` parses `<mode> <SP> <name> <NUL>
+  <20-byte SHA>` entries out of a raw tree object, and `walkTree` resolves
+  them recursively into a path→SHA map. Verified in `test/tree-oracle.test.ts`
+  against `git ls-tree -r HEAD`.
+- Repo invariants (`scripts/invariants.sh`): guards against `throw ` appearing
+  in `src/` and `void ` appearing in `test/` (scoped `--include=*.ts`), so the
+  no-throw and no-void-return conventions are checked, not just stated.
 - `makeTreeLoader` (`src/store.ts`): a `load(sha)` callback for `walkTree`
   that resolves a tree SHA loose-first, then through any pack under
   `.git/objects/pack/` (via `idx.ts` + `pack.ts`), so tree walking works
