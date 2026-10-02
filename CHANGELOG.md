@@ -43,3 +43,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `git ls-tree -r HEAD` and the test also asserts the root tree has no loose
   object on disk, so the packed resolution path is proven taken, not merely
   available.
+- Storage census (`src/summary.ts`): `storageCensus(gitDir)` counts loose
+  and packed objects by matching the *shape* of a loose object path
+  (`<2 hex>/<38 hex>` under `objects/`) rather than merely excluding
+  `pack/`, so `objects/info/packs` is never miscounted as a loose object.
+  Verified in `test/summary-oracle.test.ts` against `git count-objects -v`,
+  parsed live, across all three fixtures.
