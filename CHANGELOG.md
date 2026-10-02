@@ -27,3 +27,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   delta chain to its final object bytes. Verified in
   `test/pack-oracle.test.ts`, which reconstructs all twelve objects in the
   packed fixture byte-identically against `git cat-file`.
+- `makeTreeLoader` (`src/store.ts`): a `load(sha)` callback for `walkTree`
+  that resolves a tree SHA loose-first, then through any pack under
+  `.git/objects/pack/` (via `idx.ts` + `pack.ts`), so tree walking works
+  against a real repo where most trees are packed, not just the loose-only
+  fixtures. Verified in `test/store-oracle.test.ts` against the `packed`
+  fixture, where `walkTree`'s path→SHA map is set-compared against
+  `git ls-tree -r HEAD` and the test also asserts the root tree has no loose
+  object on disk, so the packed resolution path is proven taken, not merely
+  available.

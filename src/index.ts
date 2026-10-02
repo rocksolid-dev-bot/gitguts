@@ -10,6 +10,7 @@ export {
 } from "./pack.js";
 export { parseTree, walkTree } from "./tree.js";
 export type { TreeEntry, TreeEntryKind, TreeWalkResult } from "./tree.js";
+export { makeTreeLoader } from "./store.js";
 export type {
   PackObjectType,
   PackObjectHeader,
