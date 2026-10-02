@@ -58,3 +58,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   empty one. Verified in `test/summary-oracle.test.ts` against
   `git verify-pack -v`, parsed live, including the degenerate pack-less
   case asserting `meanDepth` is `0`, never `NaN`.
+- Largest objects by true size (`src/summary.ts`): `largestObjects(repoDir,
+  n)` ranks every loose and packed object by reconstructed size (never a
+  pack's stored delta-stream length), ties broken SHA-ascending, and
+  resolves each object's path by walking HEAD's tree through
+  `makeTreeLoader` -- `null` for anything not reachable from HEAD rather
+  than a guess. Verified in `test/largest-objects-oracle.test.ts` against
+  `git cat-file -s` / `git ls-tree -r HEAD`, including the packed fixture's
+  four-way 3510-byte tie, where only one of the four resolves to a path.
