@@ -2,6 +2,9 @@
   "name": "gitguts",
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "gitguts": "dist/cli.js"
+  },
   "engines": {
     "node": ">=18"
   },
