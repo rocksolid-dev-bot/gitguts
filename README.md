@@ -4,7 +4,7 @@ Open a repository's .git and explain it: how many objects are loose vs packed, w
 
 ## Status
 
-Day 11. Six readers so far:
+Six readers so far:
 
 - `readLooseObject` (`src/loose.ts`) — inflates and parses a single loose
   object (`.git/objects/xx/yyyy...`): type, size, raw payload.
@@ -23,9 +23,14 @@ Day 11. Six readers so far:
 - `makeTreeLoader` (`src/store.ts`) — resolves a SHA from loose storage
   first, falling back to every pack under `.git/objects/pack/` (via
   `idx.ts` + `pack.ts`), for use as `walkTree`'s `load` callback.
-- `storageCensus` (`src/summary.ts`) — loose vs packed object counts and
-  byte totals for a repository, against `git count-objects -v` as the
-  oracle.
+- `storageCensus` / `deltaStats` / `largestObjects` (`src/summary.ts`) —
+  `storageCensus` reports loose vs packed object counts and byte totals
+  for a repository, against `git count-objects -v` as the oracle.
+  `deltaStats` reports the delta-chain depth histogram across a pack's
+  objects, against `git verify-pack -v`'s depth column. `largestObjects`
+  ranks a repository's objects by true reconstructed size (not a pack's
+  stored delta-stream size), resolving each one's path by walking the
+  tree from HEAD — `null` when the object is unreachable from HEAD.
 
 All six are read-only, return a value on failure rather than throwing,
 and are verified against `git verify-pack -v` / `git cat-file` as the
