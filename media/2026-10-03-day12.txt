@@ -1,0 +1,72 @@
+=== git log --oneline -6 ===
+454903f feat(cli): delta-chain and largest-blob sections
+6d03d5f feat(cli): gitguts <repo> prints the storage census
+52b22ca docs(readme): name deltaStats and largestObjects, drop the day counter
+bc119a2 chore(media): day 11 close-out capture
+1083152 feat(summary): largestObjects by true reconstructed size, path via HEAD walk
+cb202ec feat(summary): deltaStats delta-chain histogram against verify-pack
+exit=0
+=== git status --short ===
+?? media/2026-10-03-day12.txt
+exit=0
+=== npx tsc --noEmit ===
+exit=0
+=== npm test ===
+
+> gitguts@0.0.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 36ms
+ ✓ test/pack-oracle.test.ts (6 tests) 103ms
+ ✓ test/tree-oracle.test.ts (4 tests) 55ms
+ ✓ test/cli-oracle.test.ts (6 tests) 48ms
+ ✓ test/idx-oracle.test.ts (7 tests) 21ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 66ms
+ ✓ test/oracle.test.ts (17 tests) 53ms
+ ✓ test/store-oracle.test.ts (3 tests) 16ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  08:19:51
+   Duration  3.87s (transform 318ms, setup 0ms, collect 548ms, tests 396ms, environment 3ms, prepare 786ms)
+
+exit=0
+=== bash scripts/invariants.sh ===
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+=== npm run build ===
+
+> gitguts@0.0.0 build
+> tsc
+
+exit=0
+=== node dist/cli.js test/fixtures/repos/packed ===
+loose objects      0   (0 B)
+packs              1   12 objects
+  delta chains     max depth 1, 3 deltified
+largest blobs      3336c5f  3.4 KB  -
+                   80c0c57  3.4 KB  big.txt
+                   c7dc7f0  3.4 KB  -
+exit=0
+=== node dist/cli.js test/fixtures/repos/basic ===
+loose objects      3   (198 B)
+packs              0   0 objects
+  delta chains     max depth 0, 0 deltified
+largest blobs      341fd11  198 B  -
+                   b4ed918  33 B  -
+                   ce01362  6 B  f.txt
+exit=0
+=== git log origin/main..HEAD --oneline (must be empty) ===
+exit=0
