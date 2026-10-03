@@ -14,7 +14,20 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { storageCensus, type StorageCensus } from "./summary.js";
+import {
+  storageCensus,
+  deltaStats,
+  largestObjects,
+  type StorageCensus,
+  type DeltaStats,
+  type LargestObject,
+} from "./summary.js";
+
+/** Every label column in BRIEF.md's sample block lines up at this width --
+ * measured off the sample itself ("loose objects" + 6 spaces = 19,
+ * "packs" + 14 spaces = 19, "  delta chains" + 5 spaces = 19, "largest
+ * blobs" + 6 spaces = 19), never eyeballed per line. */
+const LABEL_WIDTH = 19;
 
 /** Formats a byte count the way `git count-objects -v` reads, human-scale:
  * whole bytes under 1 KB, one decimal place from 1 KB up. Never `NaN` --
@@ -42,9 +55,46 @@ function humanBytes(bytes: number): string {
  */
 export function renderCensus(c: StorageCensus): string {
   const lines: string[] = [];
-  lines.push(`loose objects      ${c.loose.count}   (${humanBytes(c.loose.bytes)})`);
-  lines.push(`packs              ${c.packed.packs}   ${c.packed.count} objects`);
+  lines.push(
+    `${"loose objects".padEnd(LABEL_WIDTH)}${c.loose.count}   (${humanBytes(c.loose.bytes)})`
+  );
+  lines.push(`${"packs".padEnd(LABEL_WIDTH)}${c.packed.packs}   ${c.packed.count} objects`);
   return lines.join("\n");
+}
+
+/**
+ * Renders the delta-chain histogram as BRIEF.md's `  delta chains` line:
+ * the max chain depth reached and how many objects out of the pack(s)
+ * were deltified at all (`objects - histogram[0]`, never `objects` alone
+ * -- the non-delta objects are not deltified). A repo with no packs gets
+ * the identical shape with zeros -- `deltaStats`'s own no-pack guard
+ * already keeps `meanDepth` out of `NaN`, so there is nothing here that
+ * can print `NaN`: "no packs" and "no deltas" render the same honest
+ * line, never a blank one.
+ */
+export function renderDeltaChains(d: DeltaStats): string {
+  const deltified = d.objects - (d.histogram[0] ?? 0);
+  return `${"  delta chains".padEnd(LABEL_WIDTH)}max depth ${d.maxDepth}, ${deltified} deltified`;
+}
+
+/**
+ * Renders the top-N largest-objects ranking as BRIEF.md's `largest blobs`
+ * block: one row per object, SHA abbreviated to 7 hex characters (git's
+ * own default abbreviation length), size human-readable, and the path as
+ * resolved by `largestObjects` itself -- `-` when the object is not
+ * reachable from HEAD, which is a value read off the walk, never
+ * "unknown" and never guessed. Only the first row carries the label;
+ * continuation rows indent to the same column so the block reads as one
+ * ranking, not N separate sections.
+ */
+export function renderLargestObjects(objs: LargestObject[]): string {
+  return objs
+    .map((o, i) => {
+      const label = i === 0 ? "largest blobs".padEnd(LABEL_WIDTH) : " ".repeat(LABEL_WIDTH);
+      const path = o.path ?? "-";
+      return `${label}${o.sha.slice(0, 7)}  ${humanBytes(o.size)}  ${path}`;
+    })
+    .join("\n");
 }
 
 /**
@@ -61,7 +111,13 @@ export function main(argv: string[]): number {
     return 1;
   }
   const census = storageCensus(gitDir);
-  process.stdout.write(renderCensus(census) + "\n");
+  const delta = deltaStats(gitDir);
+  const top = largestObjects(repoPath, 3);
+  const sections = [renderCensus(census), renderDeltaChains(delta)];
+  if (top.length > 0) {
+    sections.push(renderLargestObjects(top));
+  }
+  process.stdout.write(sections.join("\n") + "\n");
   return 0;
 }
 
