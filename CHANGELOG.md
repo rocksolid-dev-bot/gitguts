@@ -66,3 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   than a guess. Verified in `test/largest-objects-oracle.test.ts` against
   `git cat-file -s` / `git ls-tree -r HEAD`, including the packed fixture's
   four-way 3510-byte tie, where only one of the four resolves to a path.
+- CLI entry point (`src/cli.ts`): a `"bin": gitguts` command that ties
+  `loose.ts`/`idx.ts`/`pack.ts`/`tree.ts`/`summary.ts` together, printing a
+  repo's storage census, delta-chain histogram and largest-objects ranking.
+  Verified in `test/cli-oracle.test.ts` against live `git count-objects -v`.
