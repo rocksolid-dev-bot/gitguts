@@ -5,6 +5,12 @@
   "bin": {
     "gitguts": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "engines": {
     "node": ">=18"
   },
