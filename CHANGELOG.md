@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-05
+
 ### Changed
 
+- The published package now ships only `dist/`, `README.md`, `LICENSE` and
+  `CHANGELOG.md`. Earlier tarballs also carried the TypeScript sources, the
+  test suite, `tsconfig.json` and the `media/` build captures.
 - CLI output: the `largest blobs` ranking label is renamed to
   `largest objects`, matching `largestObjects`'s actual behavior of ranking
   every object type (commit/tree/blob), not blobs alone. The loose-objects
