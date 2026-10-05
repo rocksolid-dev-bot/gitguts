@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/prepush.sh`: the local pre-push gate (the PAT cannot push
+  `.github/workflows/`, so there is no CI). Runs `tsc --noEmit`, `npm run
+  build`, `npm test`, `scripts/invariants.sh`, an orphan-symbol guard over
+  `src`+`test`, an `npm pack --dry-run` content/version assertion and both
+  CLI fixture runs (good repo exit 0, bad path exit 1), accumulating a
+  `status` variable rather than stopping at the first failure so every step
+  is measured.
+
 ## [0.1.0] - 2026-10-05
 
 ### Changed
