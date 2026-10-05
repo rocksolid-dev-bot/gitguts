@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- CLI output: the `largest blobs` ranking label is renamed to
+  `largest objects`, matching `largestObjects`'s actual behavior of ranking
+  every object type (commit/tree/blob), not blobs alone. The loose-objects
+  line and the ranking block now both name their byte unit explicitly: the
+  loose-objects total is on-disk (compressed) bytes, while each ranked
+  object's size is its logical (uncompressed) byte count -- the two had
+  shared one unlabeled number before this change.
+
 ### Added
 
 - Loose-object reader (`src/loose.ts`): parses the zlib-compressed
