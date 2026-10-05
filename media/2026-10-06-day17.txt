@@ -1,0 +1,123 @@
+=== Step 0: re-measure ===
+--- node -v ---
+v18.19.1
+exit=0
+--- npx tsc --noEmit ---
+exit=0
+--- npm test ---
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 40ms
+ ✓ test/pack-oracle.test.ts (6 tests) 130ms
+ ✓ test/tree-oracle.test.ts (4 tests) 56ms
+ ✓ test/cli-oracle.test.ts (6 tests) 42ms
+ ✓ test/idx-oracle.test.ts (7 tests) 20ms
+ ✓ test/object-oracle.test.ts (29 tests) 158ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 85ms
+ ✓ test/oracle.test.ts (17 tests) 32ms
+ ✓ test/store-oracle.test.ts (3 tests) 20ms
+
+ Test Files  9 passed (9)
+      Tests  88 passed (88)
+   Start at  23:07:22
+   Duration  4.52s (transform 320ms, setup 0ms, collect 616ms, tests 582ms, environment 3ms, prepare 882ms)
+
+exit=0
+--- bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+--- ls test/fixtures/repos/ ---
+basic
+nested
+packed
+exit=0
+
+=== Item 1: gate repair acceptance ===
+--- grep -c '-ne 16' scripts/prepush.sh ---
+0
+exit=1
+--- grep -c 'gitguts-0.1.0.tgz' scripts/prepush.sh ---
+0
+exit=1
+--- bash scripts/prepush.sh (baseline, version 0.1.0) ---
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0
+dist_pack=16 dist_actual=16 expected=gitguts-0.1.0.tgz
+npm notice filename:      gitguts-0.1.0.tgz                       
+exit=0
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+--- 11: overall ---
+overall exit=0
+--- falsification 1: bump to 0.1.1 ---
+  "version": "0.1.1",
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0
+dist_pack=16 dist_actual=16 expected=gitguts-0.1.1.tgz
+npm notice filename:      gitguts-0.1.1.tgz                       
+exit=0
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+--- 11: overall ---
+overall exit=0
+--- tree after restore (expect only intended diffs tracked, no stray changes) ---
+?? media/2026-10-06-day17.txt
+--- falsification 2: narrow files field ---
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0
+dist_pack=1 dist_actual=16 expected=gitguts-0.1.0.tgz
+npm notice filename:      gitguts-0.1.0.tgz                       
+exit=1
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+--- 11: overall ---
+overall exit=1
+--- tree after restore ---
+?? media/2026-10-06-day17.txt
+
+=== Item 2: gitguts object <sha> oracle comparisons ===
+--- packed blob: CLI vs git oracle ---
+type               blob
+size               3.4 KB (logical, not on-disk)
+storage            packed
+exit=0
+oracle: blob 3510
+--- loose blob: CLI vs git oracle ---
+type               blob
+size               6 B (logical, not on-disk)
+storage            loose
+exit=0
+oracle: blob 6
+--- error path: unknown sha ---
+gitguts: object 0000000000000000000000000000000000000000 found in neither loose storage nor any pack under test/fixtures/repos/packed
+exit=1
+--- error path: missing sha ---
+gitguts: object requires a <sha> argument
+exit=1
+--- no-subcommand routing unchanged: diff against pre-edit capture ---
+diff exit=0
+
+=== Item 3: README extracted block diff ===
+--- extractor: fence-counter pinned to block index (not an awk range) ---
+total blocks: 6
+type               blob
+size               6 B (logical, not on-disk)
+storage            loose
+extract exit=0
+total blocks: 6
+diff exit=0
+
+=== Final gate run ===
+--- 10: node dist/cli.js /tmp/definitely-not-a-repo ---
+gitguts: /tmp/definitely-not-a-repo is not a git repository (no .git found)
+exit=1
+--- 11: overall ---
+overall exit=0
+
+=== Repo state ===
+--- git log origin/main..HEAD (expect empty) ---
+exit=0
+--- git status --short -- . ':!media/' (expect empty) ---
+exit=0
