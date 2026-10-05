@@ -55,15 +55,21 @@ test_count=$(grep -c " test/" "$packtmp")
 media_count=$(grep -c " media/" "$packtmp")
 dist_count=$(grep -c " dist/" "$packtmp")
 filename_line=$(grep "filename:" "$packtmp")
-echo "src_count=$src_count test_count=$test_count media_count=$media_count dist_count=$dist_count"
+pkg_name=$(node -p "require('./package.json').name")
+pkg_version=$(node -p "require('./package.json').version")
+expected_tgz="$pkg_name-$pkg_version.tgz"
+dist_actual=$(find dist -type f | wc -l)
+echo "src_count=$src_count test_count=$test_count media_count=$media_count"
+echo "dist_pack=$dist_count dist_actual=$dist_actual expected=$expected_tgz"
 echo "$filename_line"
 rc=0
 [ "$src_count" -ne 0 ] && rc=1
 [ "$test_count" -ne 0 ] && rc=1
 [ "$media_count" -ne 0 ] && rc=1
-[ "$dist_count" -ne 16 ] && rc=1
+[ "$dist_count" -eq "$dist_actual" ] || rc=1
+[ "$dist_actual" -ne 0 ] || rc=1
 case "$filename_line" in
-  *gitguts-0.1.0.tgz*) ;;
+  *"$expected_tgz"*) ;;
   *) rc=1 ;;
 esac
 rm -f "$packtmp"

@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `status` variable rather than stopping at the first failure so every step
   is measured.
 
+### Fixed
+
+- `scripts/prepush.sh` step 8: the pack-content assertion hardcoded
+  `dist_count -ne 16` and a literal `gitguts-0.1.0.tgz` filename, so a
+  legitimate version bump or a new source file would fail the gate even
+  though nothing was wrong. It now derives `expected_tgz` from
+  `package.json`'s own name/version and compares `dist_pack` (from
+  `npm pack --dry-run`) against `dist_actual` (`find dist -type f | wc -l`),
+  asserting both agree and that neither is zero, printing all three values
+  before comparing.
+
 ## [0.1.0] - 2026-10-05
 
 ### Changed
