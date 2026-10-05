@@ -1,0 +1,412 @@
+=== close-out capture, day 16, 2026-10-05 ===
+--- base tree check ---
+hostname: 0b9bc3a91a22
+node -v: v18.19.1
+HEAD before item 1: 4481433aa81b46488ccf53df65f5ffd3ebd328dd
+origin/main matched, git status --short empty, git log origin/main..HEAD empty (all re-verified at WAKE)
+
+--- item 1 acceptance (npm pack --dry-run on package.json with files field) ---
+npm notice 
+npm notice package: gitguts@0.0.0
+npm notice === Tarball Contents === 
+npm notice 5.0kB  CHANGELOG.md     
+npm notice 1.1kB  LICENSE          
+npm notice 4.1kB  README.md        
+npm notice 2.2kB  dist/cli.d.ts    
+npm notice 5.3kB  dist/cli.js      
+npm notice 595B   dist/idx.d.ts    
+npm notice 4.3kB  dist/idx.js      
+npm notice 823B   dist/index.d.ts  
+npm notice 363B   dist/index.js    
+npm notice 318B   dist/loose.d.ts  
+npm notice 1.3kB  dist/loose.js    
+npm notice 3.3kB  dist/pack.d.ts   
+npm notice 13.0kB dist/pack.js     
+npm notice 446B   dist/store.d.ts  
+npm notice 4.1kB  dist/store.js    
+npm notice 3.0kB  dist/summary.d.ts
+npm notice 11.5kB dist/summary.js  
+npm notice 2.2kB  dist/tree.d.ts   
+npm notice 3.3kB  dist/tree.js     
+npm notice 486B   package.json     
+npm notice === Tarball Details === 
+npm notice name:          gitguts                                 
+npm notice version:       0.0.0                                   
+npm notice filename:      gitguts-0.0.0.tgz                       
+npm notice package size:  20.6 kB                                 
+npm notice unpacked size: 66.6 kB                                 
+npm notice shasum:        0feb37ef51ed19b8dc093e58f84ae07ef7b0e2ed
+npm notice integrity:     sha512-lHk3q7TVpXodc[...]L+gRYbvO+b5kQ==
+npm notice total files:   20                                      
+npm notice 
+media=0 src=0 test=0 tsconfig=0 scripts=0 dist=16 total=20 docs=3
+json parse exit=0
+npm test: 59 passed / 8 files
+tsc --noEmit exit=0
+invariants.sh exit=0 (three ok: lines)
+git show --stat HEAD (item1 commit 1e6f616): package.json | 6 ++++++, 1 file changed
+no .tgz left, git status --short empty after commit
+
+--- item 2 acceptance ---
+version: 0.0.0 -> 0.1.0
+CHANGELOG: [0.1.0] - 2026-10-05 count=1, [Unreleased] count=1 (above 0.1.0, line 7 vs 9)
+media/ in CHANGELOG count=1 (the new bullet)
+tag/v0.1.0 mention in CHANGELOG count=0
+npm test 59 passed, tsc exit=0, invariants exit=0
+npm pack --dry-run filename: gitguts-0.1.0.tgz
+git show --stat HEAD (item2 commit 8bf4399): package.json, CHANGELOG.md, 2 files changed
+
+--- item 3a: scripts/prepush.sh committed (c0336b9), chmod +x ---
+-rwxrwxr-x 1 dev dev 2463 Oct  5 19:16 scripts/prepush.sh
+
+--- item 3b: gate run 1 (at HEAD, clean, before falsify) ---
+--- 1: node -v ---
+v18.19.1
+exit=0
+--- 2: npm ci ---
+
+added 47 packages, and audited 48 packages in 2s
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (3 moderate, 1 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+exit=0
+--- 3: npx tsc --noEmit ---
+exit=0
+--- 4: npm run build ---
+
+> gitguts@0.1.0 build
+> tsc
+
+exit=0
+--- 5: npm test ---
+
+> gitguts@0.1.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 38ms
+ ✓ test/pack-oracle.test.ts (6 tests) 103ms
+ ✓ test/tree-oracle.test.ts (4 tests) 46ms
+ ✓ test/cli-oracle.test.ts (6 tests) 41ms
+ ✓ test/idx-oracle.test.ts (7 tests) 19ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 69ms
+ ✓ test/oracle.test.ts (17 tests) 39ms
+ ✓ test/store-oracle.test.ts (3 tests) 15ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:17:26
+   Duration  4.00s (transform 389ms, setup 0ms, collect 582ms, tests 370ms, environment 2ms, prepare 772ms)
+
+
+> gitguts@0.1.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 38ms
+ ✓ test/pack-oracle.test.ts (6 tests) 103ms
+ ✓ test/tree-oracle.test.ts (4 tests) 46ms
+ ✓ test/cli-oracle.test.ts (6 tests) 41ms
+ ✓ test/idx-oracle.test.ts (7 tests) 19ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 69ms
+ ✓ test/oracle.test.ts (17 tests) 39ms
+ ✓ test/store-oracle.test.ts (3 tests) 15ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:17:26
+   Duration  4.00s (transform 389ms, setup 0ms, collect 582ms, tests 370ms, environment 2ms, prepare 772ms)
+
+exit=0
+--- 6: bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+--- 7: orphan guard (tsconfig.orphan.json) ---
+exit=0
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0 dist_count=16
+npm notice filename:      gitguts-0.1.0.tgz                       
+exit=0
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+loose objects      3   (198 B on disk)
+packs              0   0 objects
+  delta chains     max depth 0, 0 deltified
+largest objects    341fd11  198 B  -
+                   b4ed918  33 B  -
+                   ce01362  6 B  f.txt
+                   (sizes above are logical; loose/pack totals are on-disk bytes)
+nan_count=0
+exit=0
+--- 10: node dist/cli.js /tmp/definitely-not-a-repo ---
+gitguts: /tmp/definitely-not-a-repo is not a git repository (no .git found)
+exit=1
+--- 11: overall ---
+overall exit=0
+
+--- item 3b: FALSIFY -- version bumped to 0.1.1 to break step 8 filename assertion ---
+--- 1: node -v ---
+v18.19.1
+exit=0
+--- 2: npm ci ---
+
+added 47 packages, and audited 48 packages in 2s
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (3 moderate, 1 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+exit=0
+--- 3: npx tsc --noEmit ---
+exit=0
+--- 4: npm run build ---
+
+> gitguts@0.1.1 build
+> tsc
+
+exit=0
+--- 5: npm test ---
+
+> gitguts@0.1.1 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.1 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 36ms
+ ✓ test/pack-oracle.test.ts (6 tests) 88ms
+ ✓ test/tree-oracle.test.ts (4 tests) 41ms
+ ✓ test/cli-oracle.test.ts (6 tests) 46ms
+ ✓ test/idx-oracle.test.ts (7 tests) 21ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 73ms
+ ✓ test/oracle.test.ts (17 tests) 36ms
+ ✓ test/store-oracle.test.ts (3 tests) 17ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:17:52
+   Duration  4.07s (transform 353ms, setup 0ms, collect 581ms, tests 358ms, environment 3ms, prepare 756ms)
+
+
+> gitguts@0.1.1 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.1 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 36ms
+ ✓ test/pack-oracle.test.ts (6 tests) 88ms
+ ✓ test/tree-oracle.test.ts (4 tests) 41ms
+ ✓ test/cli-oracle.test.ts (6 tests) 46ms
+ ✓ test/idx-oracle.test.ts (7 tests) 21ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 73ms
+ ✓ test/oracle.test.ts (17 tests) 36ms
+ ✓ test/store-oracle.test.ts (3 tests) 17ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:17:52
+   Duration  4.07s (transform 353ms, setup 0ms, collect 581ms, tests 358ms, environment 3ms, prepare 756ms)
+
+exit=0
+--- 6: bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+--- 7: orphan guard (tsconfig.orphan.json) ---
+exit=0
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0 dist_count=16
+npm notice filename:      gitguts-0.1.1.tgz                       
+exit=1
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+loose objects      3   (198 B on disk)
+packs              0   0 objects
+  delta chains     max depth 0, 0 deltified
+largest objects    341fd11  198 B  -
+                   b4ed918  33 B  -
+                   ce01362  6 B  f.txt
+                   (sizes above are logical; loose/pack totals are on-disk bytes)
+nan_count=0
+exit=0
+--- 10: node dist/cli.js /tmp/definitely-not-a-repo ---
+gitguts: /tmp/definitely-not-a-repo is not a git repository (no .git found)
+exit=1
+--- 11: overall ---
+overall exit=1
+
+--- item 3b: restored to 0.1.0, re-run, green ---
+--- 1: node -v ---
+v18.19.1
+exit=0
+--- 2: npm ci ---
+
+added 47 packages, and audited 48 packages in 2s
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (3 moderate, 1 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+exit=0
+--- 3: npx tsc --noEmit ---
+exit=0
+--- 4: npm run build ---
+
+> gitguts@0.1.0 build
+> tsc
+
+exit=0
+--- 5: npm test ---
+
+> gitguts@0.1.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 46ms
+ ✓ test/pack-oracle.test.ts (6 tests) 94ms
+ ✓ test/tree-oracle.test.ts (4 tests) 68ms
+ ✓ test/cli-oracle.test.ts (6 tests) 45ms
+ ✓ test/idx-oracle.test.ts (7 tests) 23ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 74ms
+ ✓ test/oracle.test.ts (17 tests) 35ms
+ ✓ test/store-oracle.test.ts (3 tests) 25ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:18:19
+   Duration  4.00s (transform 356ms, setup 0ms, collect 552ms, tests 410ms, environment 3ms, prepare 777ms)
+
+
+> gitguts@0.1.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 46ms
+ ✓ test/pack-oracle.test.ts (6 tests) 94ms
+ ✓ test/tree-oracle.test.ts (4 tests) 68ms
+ ✓ test/cli-oracle.test.ts (6 tests) 45ms
+ ✓ test/idx-oracle.test.ts (7 tests) 23ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 74ms
+ ✓ test/oracle.test.ts (17 tests) 35ms
+ ✓ test/store-oracle.test.ts (3 tests) 25ms
+
+ Test Files  8 passed (8)
+      Tests  59 passed (59)
+   Start at  19:18:19
+   Duration  4.00s (transform 356ms, setup 0ms, collect 552ms, tests 410ms, environment 3ms, prepare 777ms)
+
+exit=0
+--- 6: bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+--- 7: orphan guard (tsconfig.orphan.json) ---
+exit=0
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0 dist_count=16
+npm notice filename:      gitguts-0.1.0.tgz                       
+exit=0
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+loose objects      3   (198 B on disk)
+packs              0   0 objects
+  delta chains     max depth 0, 0 deltified
+largest objects    341fd11  198 B  -
+                   b4ed918  33 B  -
+                   ce01362  6 B  f.txt
+                   (sizes above are logical; loose/pack totals are on-disk bytes)
+nan_count=0
+exit=0
+--- 10: node dist/cli.js /tmp/definitely-not-a-repo ---
+gitguts: /tmp/definitely-not-a-repo is not a git repository (no .git found)
+exit=1
+--- 11: overall ---
+overall exit=0
+
+--- item 3b acceptance summary ---
+exit= lines count: 10 (both runs)
+overall exit=0 (clean run), overall exit=1 (falsified run), overall exit=0 (restored run)
+> gitguts@0.1.0 build banner count=1 in clean/restored runs
+Tests: 59 passed, 8 files (both clean runs)
+tsconfig.orphan.json left behind: 0 (git status --short clean)
+git status --short -- . :!media/ : empty
+
+--- item 3c: tag ---
+v0.1.0
+tag
+rev-list v0.1.0: c0336b9c8cb8aec0e6cece3869d53666724f3aa1
+HEAD: c0336b9c8cb8aec0e6cece3869d53666724f3aa1
+0626c126ca2653cd01e510109d5f6d460ef45633	refs/tags/v0.1.0
+c0336b9c8cb8aec0e6cece3869d53666724f3aa1	refs/tags/v0.1.0^{}
+
+--- final clean-tree check ---
+(empty = clean)
