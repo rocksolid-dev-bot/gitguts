@@ -22,6 +22,7 @@ import {
   type DeltaStats,
   type LargestObject,
 } from "./summary.js";
+import { resolveObjectBySha, type ResolvedObject } from "./store.js";
 
 /** Every label column in BRIEF.md's sample block lines up at this width --
  * measured off the sample itself ("loose objects" + 6 spaces = 19,
@@ -98,12 +99,53 @@ export function renderLargestObjects(objs: LargestObject[]): string {
 }
 
 /**
+ * Renders a single object's report for `gitguts object <sha>`: logical
+ * type, logical (uncompressed) size and which storage it was found in.
+ * Pure, returns text, prints nothing -- the same contract every other
+ * renderer in this file keeps. Reuses `humanBytes`, and says "logical"
+ * explicitly because the census block above it on the same screen reports
+ * on-disk compressed bytes instead.
+ */
+export function renderObject(o: ResolvedObject): string {
+  const lines: string[] = [];
+  lines.push(`${"type".padEnd(LABEL_WIDTH)}${o.type}`);
+  lines.push(`${"size".padEnd(LABEL_WIDTH)}${humanBytes(o.size)} (logical, not on-disk)`);
+  lines.push(`${"storage".padEnd(LABEL_WIDTH)}${o.storage}`);
+  return lines.join("\n");
+}
+
+/**
  * `argv[2] ?? "."` is the repo path (so `main(process.argv)` on `node
  * cli.js <path>` and `main(process.argv)` on `node cli.js` both work). A
  * missing or non-`.git` path returns a non-zero code and writes a
  * one-line reason to stdout -- a returned value, never an exception.
+ *
+ * `argv[2] === "object"` routes to the per-object verb:
+ * `gitguts object <sha> [repo]`. A missing sha, an unknown sha and a
+ * non-repo path each return 1 with one line and no stack trace, same
+ * convention as the no-subcommand path below it.
  */
 export function main(argv: string[]): number {
+  if (argv[2] === "object") {
+    const sha = argv[3];
+    const repoPath = argv[4] ?? ".";
+    if (!sha) {
+      process.stdout.write("gitguts: object requires a <sha> argument\n");
+      return 1;
+    }
+    const gitDir = join(repoPath, ".git");
+    if (!existsSync(gitDir)) {
+      process.stdout.write(`gitguts: ${repoPath} is not a git repository (no .git found)\n`);
+      return 1;
+    }
+    const resolved = resolveObjectBySha(repoPath, sha);
+    if ("error" in resolved) {
+      process.stdout.write(`gitguts: ${resolved.error}\n`);
+      return 1;
+    }
+    process.stdout.write(renderObject(resolved) + "\n");
+    return 0;
+  }
   const repoPath = argv[2] ?? ".";
   const gitDir = join(repoPath, ".git");
   if (!existsSync(gitDir)) {

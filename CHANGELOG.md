@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `gitguts object <sha> [repo]`: reports an object's logical type, logical
+  (uncompressed) size and which storage it was found in (`loose` or
+  `packed`). Resolution is loose-first then every discovered pack, same
+  order `makeTreeLoader` already used; sizes are explicitly labelled
+  logical because the census line above it on the same screen reports
+  on-disk compressed bytes. A missing sha, an unknown sha, and a
+  non-repo path each exit 1 with one line and no stack trace.
 - `scripts/prepush.sh`: the local pre-push gate (the PAT cannot push
   `.github/workflows/`, so there is no CI). Runs `tsc --noEmit`, `npm run
   build`, `npm test`, `scripts/invariants.sh`, an orphan-symbol guard over

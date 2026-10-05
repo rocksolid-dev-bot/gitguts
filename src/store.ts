@@ -15,7 +15,7 @@ import { readLooseObject } from "./loose.js";
 import { readIdx, lookupBySha, type Idx } from "./idx.js";
 import { resolvePackObject } from "./pack.js";
 import { parseTree, type TreeEntry } from "./tree.js";
-import type { PackError } from "./pack.js";
+import type { PackError, PackObjectType } from "./pack.js";
 
 interface PackSource {
   idx: Idx;
@@ -81,6 +81,54 @@ function loadPackedTree(sources: PackSource[], sha: string): TreeEntry[] | PackE
     return parseTree(resolved.payload);
   }
   return undefined;
+}
+
+export interface ResolvedObject {
+  /** Logical object type, read off the loose header or the pack header --
+   * the same four values either storage can hold. */
+  type: PackObjectType;
+  /** Logical (uncompressed) byte size -- what `git cat-file -s` reports,
+   * never the on-disk compressed size. */
+  size: number;
+  storage: "loose" | "packed";
+  /** Delta chain depth walked to resolve this object: 0 for loose and for
+   * a non-delta packed object. */
+  depth: number;
+}
+
+/**
+ * Resolves a single object by SHA against `repoDir`'s object store, loose
+ * first and then every pack found under `.git/objects/pack/` -- the same
+ * resolution order `makeTreeLoader` uses. Never throws: a SHA present in
+ * neither storage, or an unreadable/unresolvable object, is a returned
+ * `PackError`.
+ */
+export function resolveObjectBySha(repoDir: string, sha: string): ResolvedObject | PackError {
+  const loosePath = join(repoDir, ".git/objects", sha.slice(0, 2), sha.slice(2));
+  if (existsSync(loosePath)) {
+    const obj = readLooseObject(new Uint8Array(readFileSync(loosePath)));
+    if ("error" in obj) {
+      return { error: `loose object ${sha} unreadable: ${obj.error}` };
+    }
+    return { type: obj.type, size: obj.size, storage: "loose", depth: 0 };
+  }
+  const packSources = discoverPackSources(repoDir);
+  if ("error" in packSources) {
+    return packSources;
+  }
+  for (const source of packSources) {
+    const entry = lookupBySha(source.idx, sha);
+    if (!entry) {
+      continue;
+    }
+    const resolveBaseBySha = (baseSha: string) => lookupBySha(source.idx, baseSha);
+    const resolved = resolvePackObject(source.packBuf, entry.offset, resolveBaseBySha);
+    if ("error" in resolved) {
+      return { error: `pack object ${sha} unresolvable: ${resolved.error}` };
+    }
+    return { type: resolved.type, size: resolved.size, storage: "packed", depth: resolved.depth };
+  }
+  return { error: `object ${sha} found in neither loose storage nor any pack under ${repoDir}` };
 }
 
 /**

@@ -10,7 +10,8 @@ export {
 } from "./pack.js";
 export { parseTree, walkTree } from "./tree.js";
 export type { TreeEntry, TreeEntryKind, TreeWalkResult } from "./tree.js";
-export { makeTreeLoader } from "./store.js";
+export { makeTreeLoader, resolveObjectBySha } from "./store.js";
+export type { ResolvedObject } from "./store.js";
 export { storageCensus, deltaStats, largestObjects } from "./summary.js";
 export type { StorageCensus, DeltaStats, LargestObject } from "./summary.js";
 export type {
