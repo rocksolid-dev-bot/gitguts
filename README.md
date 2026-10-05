@@ -72,6 +72,17 @@ Or point it at any repository with a `.git` directory, such as the checkout itse
 node dist/cli.js .
 ```
 
+`gitguts object <sha> <repo>` reports a single object's type, size and storage. The size here is
+the object's **logical** (uncompressed) size — what `git cat-file -s` reports — while the census
+above reports **on-disk compressed** bytes, a different number for the same repository:
+
+```
+$ node dist/cli.js object ce013625030ba8dba906f756967f9e9ca394464a test/fixtures/repos/basic
+type               blob
+size               6 B (logical, not on-disk)
+storage            loose
+```
+
 A missing or non-git path returns a one-line reason and exit code 1, never a stack trace:
 
 ```
