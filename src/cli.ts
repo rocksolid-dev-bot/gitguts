@@ -56,7 +56,7 @@ function humanBytes(bytes: number): string {
 export function renderCensus(c: StorageCensus): string {
   const lines: string[] = [];
   lines.push(
-    `${"loose objects".padEnd(LABEL_WIDTH)}${c.loose.count}   (${humanBytes(c.loose.bytes)})`
+    `${"loose objects".padEnd(LABEL_WIDTH)}${c.loose.count}   (${humanBytes(c.loose.bytes)} on disk)`
   );
   lines.push(`${"packs".padEnd(LABEL_WIDTH)}${c.packed.packs}   ${c.packed.count} objects`);
   return lines.join("\n");
@@ -78,7 +78,7 @@ export function renderDeltaChains(d: DeltaStats): string {
 }
 
 /**
- * Renders the top-N largest-objects ranking as BRIEF.md's `largest blobs`
+ * Renders the top-N largest-objects ranking as BRIEF.md's `largest objects`
  * block: one row per object, SHA abbreviated to 7 hex characters (git's
  * own default abbreviation length), size human-readable, and the path as
  * resolved by `largestObjects` itself -- `-` when the object is not
@@ -88,13 +88,13 @@ export function renderDeltaChains(d: DeltaStats): string {
  * ranking, not N separate sections.
  */
 export function renderLargestObjects(objs: LargestObject[]): string {
-  return objs
-    .map((o, i) => {
-      const label = i === 0 ? "largest blobs".padEnd(LABEL_WIDTH) : " ".repeat(LABEL_WIDTH);
-      const path = o.path ?? "-";
-      return `${label}${o.sha.slice(0, 7)}  ${humanBytes(o.size)}  ${path}`;
-    })
-    .join("\n");
+  const rows = objs.map((o, i) => {
+    const label = i === 0 ? "largest objects".padEnd(LABEL_WIDTH) : " ".repeat(LABEL_WIDTH);
+    const path = o.path ?? "-";
+    return `${label}${o.sha.slice(0, 7)}  ${humanBytes(o.size)}  ${path}`;
+  });
+  const legend = `${" ".repeat(LABEL_WIDTH)}(sizes above are logical; loose/pack totals are on-disk bytes)`;
+  return [...rows, legend].join("\n");
 }
 
 /**

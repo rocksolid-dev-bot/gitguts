@@ -100,9 +100,12 @@ describe("cli-oracle: renderLargestObjects against the live cat-file -s oracle",
     const top3 = largestObjects(repoDir, 3);
     const text = renderLargestObjects(top3);
     const lines = text.split("\n");
-    expect(lines.length).toBe(3);
-    expect(lines[0].startsWith("largest blobs      ")).toBe(true);
+    expect(lines.length).toBe(4);
+    expect(lines[0].startsWith("largest objects    ")).toBe(true);
     expect(lines[1].startsWith(" ".repeat(19))).toBe(true);
+    expect(lines[3]).toBe(
+      `${" ".repeat(19)}(sizes above are logical; loose/pack totals are on-disk bytes)`
+    );
 
     for (const obj of top3) {
       const oracleSize = Number(
