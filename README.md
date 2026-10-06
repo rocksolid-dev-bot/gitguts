@@ -74,12 +74,16 @@ node dist/cli.js .
 
 `gitguts object <sha> <repo>` reports a single object's type, size and storage. The size here is
 the object's **logical** (uncompressed) size — what `git cat-file -s` reports — while the census
-above reports **on-disk compressed** bytes, a different number for the same repository:
+above reports **on-disk compressed** bytes, a different number for the same repository. `<sha>`
+takes any unique prefix from 1 to 40 hex characters, case-insensitive — the same 7-char prefix
+the census above prints under `largest objects` works directly, with no need to paste the full
+SHA; a prefix matching more than one object is reported as ambiguous, naming the prefix and how
+many objects matched:
 
 ```
-$ node dist/cli.js object ce013625030ba8dba906f756967f9e9ca394464a test/fixtures/repos/basic
-type               blob
-size               6 B (logical, not on-disk)
+$ node dist/cli.js object 341fd11 test/fixtures/repos/basic
+type               commit
+size               198 B (logical, not on-disk)
 storage            loose
 ```
 
