@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `resolveObjectBySha` now accepts 1-40 hex characters (case-insensitive)
+  instead of requiring the exact 40-char SHA. `gitguts object <sha>` can
+  now take any prefix `gitguts`'s own census prints under `largest
+  objects` (previously rejected with a message claiming the object
+  existed in neither storage, which was false). Two or more objects
+  sharing a prefix is a returned error naming the prefix and the match
+  count ("ambiguous"); zero matches keeps today's message unchanged;
+  non-hex or over-40-char input is a returned error saying so. Never
+  throws.
+
 ### Added
 
 - `gitguts object <sha> [repo]`: reports an object's logical type, logical
