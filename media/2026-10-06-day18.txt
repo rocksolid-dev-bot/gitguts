@@ -1,0 +1,193 @@
+=== day18 close-out capture, 2026-10-06T15:20:03Z ===
+
+--- pre-edit full-SHA capture (item 1 criterion 2 diff target) ---
+type               commit
+size               198 B (logical, not on-disk)
+storage            loose
+
+--- item 1: acceptance runs ---
+$ node dist/cli.js object 341fd11 test/fixtures/repos/basic
+type               commit
+size               198 B (logical, not on-disk)
+storage            loose
+exit=0
+
+$ node dist/cli.js object 341fd1112240412b8a510174ac1457aab13326f1 test/fixtures/repos/basic (post-edit)
+type               commit
+size               198 B (logical, not on-disk)
+storage            loose
+diff pre vs post:
+diff_exit=0
+
+$ node dist/cli.js object 341FD11 test/fixtures/repos/basic (mixed case)
+type               commit
+size               198 B (logical, not on-disk)
+storage            loose
+exit=0
+
+$ node dist/cli.js object f test/fixtures/repos/packed (ambiguous, real collision)
+gitguts: f is ambiguous: 3 objects match this prefix under test/fixtures/repos/packed
+exit=1
+
+$ node dist/cli.js object zzzz test/fixtures/repos/basic (invalid hex)
+gitguts: zzzz is not a hex object name
+exit=1
+
+$ node dist/cli.js object deadbeef test/fixtures/repos/basic (valid hex, no match)
+gitguts: object deadbeef found in neither loose storage nor any pack under test/fixtures/repos/basic
+exit=1
+
+--- item 1: tsc / test / invariants / orphan guard ---
+tsc_exit=0
+
+ Test Files  10 passed (10)
+      Tests  107 passed (107)
+   Start at  15:20:09
+   Duration  5.05s (transform 362ms, setup 0ms, collect 679ms, tests 659ms, environment 3ms, prepare 897ms)
+
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+invariants_exit=0
+
+--- item 2: README extractor output, pinned to fence block 5 of 6 ---
+$ node dist/cli.js object 341fd11 test/fixtures/repos/basic
+type               commit
+size               198 B (logical, not on-disk)
+storage            loose
+diff vs live run:
+diff_exit=0
+grep -cni ambiguous README.md = 1
+grep -cni REF_DELTA README.md = 5
+grep -cni 64-bit README.md = 1
+grep -c npm-install README.md = 0
+
+--- item 3: full prepush.sh run ---
+--- 1: node -v ---
+v18.19.1
+exit=0
+--- 2: npm ci ---
+
+added 47 packages, and audited 48 packages in 2s
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+7 vulnerabilities (3 moderate, 2 high, 2 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+exit=0
+--- 3: npx tsc --noEmit ---
+exit=0
+--- 4: npm run build ---
+
+> gitguts@0.2.0 build
+> tsc
+
+exit=0
+--- 5: npm test ---
+
+> gitguts@0.2.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.2.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 36ms
+ ✓ test/pack-oracle.test.ts (6 tests) 84ms
+ ✓ test/tree-oracle.test.ts (4 tests) 49ms
+ ✓ test/cli-oracle.test.ts (6 tests) 41ms
+ ✓ test/idx-oracle.test.ts (7 tests) 29ms
+ ✓ test/object-prefix.test.ts (19 tests) 56ms
+ ✓ test/object-oracle.test.ts (29 tests) 144ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 68ms
+ ✓ test/oracle.test.ts (17 tests) 38ms
+ ✓ test/store-oracle.test.ts (3 tests) 54ms
+
+ Test Files  10 passed (10)
+      Tests  107 passed (107)
+   Start at  15:20:24
+   Duration  4.92s (transform 378ms, setup 0ms, collect 718ms, tests 600ms, environment 3ms, prepare 871ms)
+
+
+> gitguts@0.2.0 pretest
+> bash scripts/make-fixtures.sh
+
+ok: fixture repo built at /work/code/test/fixtures/repos/basic
+ok: packed fixture repo built at /work/code/test/fixtures/repos/packed
+ok: nested fixture repo built at /work/code/test/fixtures/repos/nested
+
+> gitguts@0.2.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /work/code
+
+ ✓ test/summary-oracle.test.ts (10 tests) 36ms
+ ✓ test/pack-oracle.test.ts (6 tests) 84ms
+ ✓ test/tree-oracle.test.ts (4 tests) 49ms
+ ✓ test/cli-oracle.test.ts (6 tests) 41ms
+ ✓ test/idx-oracle.test.ts (7 tests) 29ms
+ ✓ test/object-prefix.test.ts (19 tests) 56ms
+ ✓ test/object-oracle.test.ts (29 tests) 144ms
+ ✓ test/largest-objects-oracle.test.ts (6 tests) 68ms
+ ✓ test/oracle.test.ts (17 tests) 38ms
+ ✓ test/store-oracle.test.ts (3 tests) 54ms
+
+ Test Files  10 passed (10)
+      Tests  107 passed (107)
+   Start at  15:20:24
+   Duration  4.92s (transform 378ms, setup 0ms, collect 718ms, tests 600ms, environment 3ms, prepare 871ms)
+
+exit=0
+--- 6: bash scripts/invariants.sh ---
+ok: no child_process/execSync in src/
+ok: no throw in src/
+ok: no void in test/
+exit=0
+--- 7: orphan guard (tsconfig.orphan.json) ---
+exit=0
+--- 8: npm pack --dry-run assertions ---
+src_count=0 test_count=0 media_count=0
+dist_pack=16 dist_actual=16 expected=gitguts-0.2.0.tgz
+npm notice filename:      gitguts-0.2.0.tgz                       
+exit=0
+--- 9: node dist/cli.js test/fixtures/repos/basic ---
+loose objects      3   (198 B on disk)
+packs              0   0 objects
+  delta chains     max depth 0, 0 deltified
+largest objects    341fd11  198 B  -
+                   b4ed918  33 B  -
+                   ce01362  6 B  f.txt
+                   (sizes above are logical; loose/pack totals are on-disk bytes)
+nan_count=0
+exit=0
+--- 10: node dist/cli.js /tmp/definitely-not-a-repo ---
+gitguts: /tmp/definitely-not-a-repo is not a git repository (no .git found)
+exit=1
+--- 11: overall ---
+overall exit=0
+
+--- item 3: tag checks ---
+tag
+6e6d4ba825f620414d61825230101166628d7510	refs/tags/v0.2.0
+c76d15bbff282f9cdc10cfb6d6e308ca9ca2d468	refs/tags/v0.2.0^{}
+c76d15bbff282f9cdc10cfb6d6e308ca9ca2d468
+npm notice filename:      gitguts-0.2.0.tgz                       
+
+--- final state ---
+clean_tree_exit=0
+unpushed_exit=0
